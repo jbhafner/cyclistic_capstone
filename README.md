@@ -398,7 +398,7 @@ ggplot(pivot_avg_by_month, aes(x = month_of_year, y = average_ride_length, fill 
    theme(plot.title = element_text(hjust = 0.5))
 ```
 
-![](cyclistic_report2-github_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+<img src="figs/3-avg_ride_time_month.png">
 
 #### 4. Ride Count by Day of the Week
 
@@ -440,7 +440,7 @@ ggplot(pivot_user_count_by_day, aes(x = day_of_week, y = num_rides, fill = membe
    theme(plot.title = element_text(hjust = 0.5))
 ```
 
-![](cyclistic_report2-github_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+<img src="figs/4-total_ride_by_day.png">
 
 #### 5. Ride Count by Month
 
@@ -476,7 +476,8 @@ ggplot(pivot_user_count_by_month, aes(x = month_of_year, y = num_rides, fill = m
    theme(plot.title = element_text(hjust = 0.5))
 ```
 
-![](cyclistic_report2-github_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+<img src="figs/5-total_ride_by_day.png">
+
 
 | member_casual | day_of_week | average_ride_length_min | num_rides |
 |:--------------|------------:|------------------------:|:----------|
@@ -528,7 +529,7 @@ ggplot(pivot_bike_type, aes(x = rideable_type, y = num_rides, fill = member_casu
    theme(plot.title = element_text(hjust = 0.5))
 ```
 
-![](cyclistic_report2-github_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+<img src="figs/6-bike_rent_type.png">
 
 ### Save my updated dataframe “data” to a csv file and RData file
 
