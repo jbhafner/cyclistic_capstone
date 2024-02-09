@@ -1,0 +1,621 @@
+Cyclistic Capstone Project
+================
+Brian Hafner
+2024-01-28
+
+# Cyclistic Rides Analysis
+
+## Background of Cyclistic
+
+Cyclistic is a bike-share program in Chicago, established in 2016, with
+5,824 bicycles across 692 stations. They offer various pricing plans,
+categorizing customers into casual riders (using single-ride or full-day
+passes) and members (holding annual memberships). The company’s
+financial analysis reveals that annual members generate more profit than
+casual riders. Therefore, Cyclistic aims to convert casual riders into
+annual members by analyzing historical bike trip data to understand
+their needs and preferences.
+
+## Plan of Analysis
+
+I’m using the Ask, Prepare, Process, Analyze, and Deliver framework I
+learned in the Google Data Analytics Certificate course to guide my
+analysis.
+
+1.  Ask - Define the problem clearly.
+2.  Prepare - Gather the data, organize it and clean it.
+3.  Process - Transform the data so I can work with it effectively.
+4.  Analyze - Identify trends and relationships in the data.
+5.  Share - Interpret & communicate my findings to key stakeholders.
+6.  Act - Make data-driven decisions based on my analysis.
+
+## Data Analysis Process Step 1 - Ask
+
+### Business Task
+
+The primary task is to analyze how casual riders and annual members use
+Cyclistic bikes differently. The goal is to support a marketing strategy
+aimed at converting casual riders into annual members. This task is
+based on the belief held by Lily Moreno, the director of marketing, that
+maximizing the number of annual memberships is key to Cyclistic’s
+growth.
+
+### Guiding Questions
+
+- How do annual members and casual riders use Cyclistic bikes
+  differently?
+- What insights can be drawn from these differences to convert casual
+  riders into annual members?
+
+### Key Stakeholders
+
+- Cyclistic Users: Casual Riders and Annual Members
+- Lily Moreno, Director of Marketing
+- Cyclistic Marketing Analytics Team
+- Cyclistic Executive Team: They will decide whether to approve the
+  recommended marketing program.
+
+### Deliverable
+
+The deliverable is a comprehensive analysis of the differences in bike
+usage between casual riders and annual members. The analysis will inform
+a marketing strategy aimed at converting casual riders into annual
+members. The findings will be shared with the key stakeholders to aid in
+decision-making.
+
+## Data Analysis Process Step 2 - Prepare
+
+In this section, I will describe the data source, the data organization,
+the data quality, and the data cleaning process.
+
+### Data Source
+
+- The data I used is from the Divvy Tripdata website:
+  <https://divvy-tripdata.s3.amazonaws.com/index.html>
+
+- The data consists of 12 csv files, one for each month of 2023,
+  containing information about the bike rides taken by Cyclistic users.
+
+- The data is publicly available and does not have any licensing,
+  privacy, security, or accessibility issues.
+
+### Data Organization
+
+- The data has 13 columns, with the following names and meanings:
+
+  - ride_id: Unique identifier for each ride
+  - ended_at: Date and time the ride ended
+  - end_station_name: Name of the station where the ride ended
+  - start_lng: Longitude of the station where the ride started
+  - member_casual: Type of user (annual member or casual rider)
+  - rideable_type: Type of bike used for the ride
+  - start_station_name: Name of the station where the ride started
+  - end_station_id: Unique identifier for the station where the ride
+    ended
+  - end_lat: Latitude of the station where the ride ended
+  - started_at: Date and time the ride started
+  - start_station_id: Unique identifier for the station where the ride
+    started
+  - start_lat: Latitude of the station where the ride started
+  - end_lng: Longitude of the station where the ride ended
+
+- The data has 5,719,877 rows, representing the rides taken by Cyclistic
+  users in 2023.
+
+### Data Quality
+
+- To assess the quality of the data, I used several tools in RStudio,
+  such as head, summary, str, and sapply, to inspect the data structure,
+  the data types, the summary statistics, and the missing values.
+
+- I found that the data has some issues with missing values, data types,
+  and data integrity. For example:
+
+  - The started_at and ended_at columns are of character type, but they
+    should be of date-time type.
+  - There are 272 rows where the ended_at value is before the started_at
+    value, which is illogical.
+  - There are 997 rows where the ride_length value is zero, which is
+    unlikely.
+
+### Data Cleaning
+
+- To clean the data, I performed the following steps in RStudio:
+
+  - I merged the 12 csv files into one data frame using the data.table,
+    fread, and rbindlist functions.
+
+  - I converted the started_at and ended_at columns from character to
+    date-time type using the as.POSIXct and format functions.
+
+  - I calculated the ride_length column by subtracting the started_at
+    column from the ended_at column using the difftime function.
+
+  - I created the day_of_week and month_of_year columns by extracting
+    the day and month information from the started_at column using the
+    wday and format functions.
+
+  - I removed the rows where the ride_length value was negative or zero
+    using the filter and subset functions.
+
+  - I saved the cleaned data frame as an RData file and a csv file using
+    the save and write.csv functions.
+
+- The cleaned data frame has 5,719,608 rows and 18 columns. The RData
+  file size is 189 MB and the csv file size is 1.2 GB6.
+
+### Data Cleaning Steps
+
+#### 1. Load Required Packages
+
+``` r
+### Load required packages
+# List of packages
+packages <- c(
+   "data.table",
+   "stringr",
+   "dplyr",
+   "ggplot2",
+   "lubridate",
+   "dplyr",
+   "tidyverse",
+   "knitr",
+   "tibble"
+)
+
+# Function to check and install packages
+check_and_install <- function(pkg) {
+   if (!pkg %in% installed.packages()) {
+      install.packages(pkg)
+   }
+}
+
+# Apply the function to each package
+sapply(packages, check_and_install)
+
+# Load the packages
+lapply(packages, library, character.only = TRUE)
+### End Load Packages
+```
+
+#### 2. Open 12 csv files (Jan to Dec 2023) and merge into the “data” dataframe.
+
+``` r
+## Open 12 csv files (Jan to Dec 2023 and merge into one dataframe called "data")
+
+# Specify the path to the directory
+files <- list.files(path = "../data-raw", pattern = ".csv")
+
+temp <- lapply(files, function(x) fread(paste0("../data-raw/", x), sep = ","))
+data <- rbindlist(temp)
+```
+
+## Data Analysis Process Step 3 - Process
+
+In this section, I will describe the tools used, the data cleaning
+process, and the data transformation process.
+
+### Tools Used
+
+I chose RStudio for this analysis because it can efficiently handle
+large datasets.
+
+### Data Cleaning
+
+- I reviewed the data and performed spot checks to ensure its integrity.
+
+- I handled missing values in the dataset by replacing them with the
+  median values of the respective columns.
+
+- I removed irregularities in the data using the is.na() function.
+
+Here’s the R code for the data cleaning process:
+
+``` r
+# Check the structure of the data
+str(data)
+```
+
+    ## Classes 'data.table' and 'data.frame':   5719877 obs. of  13 variables:
+    ##  $ ride_id           : chr  "F96D5A74A3E41399" "13CB7EB698CEDB88" "BD88A2E670661CE5" "C90792D034FED968" ...
+    ##  $ rideable_type     : chr  "electric_bike" "classic_bike" "electric_bike" "classic_bike" ...
+    ##  $ started_at        : POSIXct, format: "2023-01-21 20:05:42" "2023-01-10 15:37:36" ...
+    ##  $ ended_at          : POSIXct, format: "2023-01-21 20:16:33" "2023-01-10 15:46:05" ...
+    ##  $ start_station_name: chr  "Lincoln Ave & Fullerton Ave" "Kimbark Ave & 53rd St" "Western Ave & Lunt Ave" "Kimbark Ave & 53rd St" ...
+    ##  $ start_station_id  : chr  "TA1309000058" "TA1309000037" "RP-005" "TA1309000037" ...
+    ##  $ end_station_name  : chr  "Hampden Ct & Diversey Ave" "Greenwood Ave & 47th St" "Valli Produce - Evanston Plaza" "Greenwood Ave & 47th St" ...
+    ##  $ end_station_id    : chr  "202480.0" "TA1308000002" "599" "TA1308000002" ...
+    ##  $ start_lat         : num  41.9 41.8 42 41.8 41.8 ...
+    ##  $ start_lng         : num  -87.6 -87.6 -87.7 -87.6 -87.6 ...
+    ##  $ end_lat           : num  41.9 41.8 42 41.8 41.8 ...
+    ##  $ end_lng           : num  -87.6 -87.6 -87.7 -87.6 -87.6 ...
+    ##  $ member_casual     : chr  "member" "member" "casual" "member" ...
+    ##  - attr(*, ".internal.selfref")=<externalptr>
+
+### Data Transformation
+
+- I converted the started_at and ended_at columns from string to date
+  format.
+
+- I created a new column called ride_length by subtracting the
+  started_at column from the ended_at column.
+
+- I created two new columns, day_of_week and month_of_year, to
+  facilitate further analysis.
+
+Here’s the R code for the data transformation process:
+
+``` r
+# Convert 'started_at' and 'ended_at' from string to date format
+data$started_at <- as.POSIXct(data$started_at, format = "%Y-%m-%d %H:%M:%S")
+data$ended_at <- as.POSIXct(data$ended_at, format = "%Y-%m-%d %H:%M:%S")
+
+# Create 'ride_length' column
+data$ride_length <- as.numeric(difftime(data$ended_at, data$started_at, units = "secs"))
+
+# Create 'day_of_week' column
+data$day_of_week <- wday(data$started_at)
+
+# Create 'month_of_year' column
+data$month_of_year <- format(data$started_at, "%Y-%m")
+```
+
+## Data Analysis Process Step 4 - Analysis
+
+### Key Considerations
+
+- **Data Organization for Analysis**
+
+  I utilized the comprehensive dataset for the year 2023, spanning from
+  January to December. Given the large size of the data, which was
+  beyond Excel’s handling capacity, I opted to process it using RStudio
+  (Desktop Edition) on my Mac. I enriched the dataset by adding
+  `ride_time` and `day_of_week` columns and subsequently saved the
+  modified dataframe, `data`. For comparison of storage efficiency, I
+  stored the data in two formats:
+
+        - `2023_data_cyclistic.csv` with a size of 1.2 GB
+        - `2023_data_cyclistic.RData` with a size of 189.4 MB
+
+- **Data Formatting Verification**
+
+  I am confident that the data has been formatted correctly. However, I
+  noticed some anomalies: 272 records had the end time preceding the
+  start time, and 997 records had a ride length of 0.
+
+        - `sum(data$ride_length < 0, na.rm = TRUE)` resulted in 272
+        - `sum(data$ride_length == 0, na.rm = TRUE)` resulted in 997
+
+- **Unexpected Discoveries in the Data**
+
+  One surprising observation was the presence of extremely short rides,
+  less than 3 minutes, despite the average ride length being 18.19
+  minutes. This could be explained by users borrowing bikes for short
+  distances. Due to the error of end time being before the start time in
+  some records, I excluded those records from the calculation.
+
+        - `mean(data$ride_length[data$ride_length > 0], na.rm = TRUE)/60` resulted in 18.18978
+
+### Essential Tasks - Points to Consider
+
+- Data Aggregation for Usability and Accessibility
+
+``` r
+# Calculate mean, minimum, and maximum ride lengths
+mean_ride_length <- mean(data$ride_length[data$ride_length > 0], na.rm = TRUE) / 60 # 18.18 minutes
+min_ride_length <- min(data$ride_length[data$ride_length > 0], na.rm = TRUE) / 60 # 0.0167 minutes
+max_ride_length <- max(data$ride_length[data$ride_length > 0], na.rm = TRUE) / 60 # 98,489.07 minutes
+
+# Function to calculate mode
+find_mode <- function(x) {
+   u <- unique(x)
+   u[which.max(tabulate(match(x, u)))]
+}
+
+# Find the mode of the day_of_week
+find_mode(data$day_of_week) # 7 (Saturday)
+```
+
+    ## [1] 7
+
+#### 1. Average Ride Length for Members and Casual Riders
+
+The pivot table below presents the average ride time for members and
+casual riders for the entire year of 2023. It is observed that the ride
+time for casual riders is more than double that of members.
+
+``` r
+# Create Pivot tables
+#  Pivot by Member type
+
+pivot_member_type <- dplyr::group_by(data, member_casual) %>% dplyr::summarize(average_ride_length = mean(ride_length, na.rm = TRUE) / 60)
+knitr::kable(pivot_member_type)
+```
+
+| member_casual | average_ride_length |
+|:--------------|--------------------:|
+| casual        |            28.22453 |
+| member        |            12.51317 |
+
+#### 2. Average Ride Length by Day - Casual vs Member Rider
+
+The graph below represents the average ride time for casual riders and
+members by day of the week.
+
+``` r
+# Create pivot table
+pivot_avg_by_day <- data %>%
+   group_by(member_casual, day_of_week) %>%
+   summarize(average_ride_length = mean(ride_length, na.rm = TRUE) / 60, .groups = "keep")
+
+# Remove NA as day of week
+pivot_avg_by_day <- pivot_avg_by_day[!is.na(pivot_avg_by_day$day_of_week), ]
+
+# Change the day_of_week column to display "Sun", "Mon", ..., "Sat"
+pivot_avg_by_day$day_of_week <- factor(lubridate::wday(pivot_avg_by_day$day_of_week, label = TRUE), levels = c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"))
+
+# Create a bar graph using ggplot2
+ggplot(pivot_avg_by_day, aes(x = day_of_week, y = average_ride_length, fill = member_casual)) +
+   geom_col(position = "dodge") +
+   ggtitle("Average Ride Time by Day of Week") +
+   labs(x = "Day of Week", y = "Average Ride Length", fill = "Member Type") +
+   theme_minimal() +
+   theme(plot.title = element_text(hjust = 0.5))
+```
+
+![](cyclistic_report2-github_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+Both casual riders and members tend to take the longest rides on
+Saturdays and Sundays. Members take shorter rides on average than casual
+riders, but the pattern of ride length by day of the week is similar for
+both groups.
+
+#### 3. Average ride length by month - casual vs member rider
+
+The graph below illustrates the average ride time for casual riders and
+members by month of the year.
+
+``` r
+# Create pivot table
+pivot_avg_by_month <- data %>%
+   group_by(member_casual, month_of_year) %>%
+   summarize(average_ride_length = mean(ride_length, na.rm = TRUE) / 60, .groups = "keep")
+
+# Remove NA as day of week
+pivot_avg_by_month <- pivot_avg_by_month[!is.na(pivot_avg_by_month$month_of_year), ]
+
+# Create a bar graph of average ride time per month using ggplot2
+ggplot(pivot_avg_by_month, aes(x = month_of_year, y = average_ride_length, fill = member_casual)) +
+   geom_col(position = "dodge") +
+   ggtitle("Average Ride Time by Month") +
+   labs(x = "Month of Year", y = "Average Ride Length", fill = "Member Type") +
+   theme_minimal() +
+   theme(
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+      axis.title.x = element_text(vjust = -1)
+   ) +
+   theme(plot.title = element_text(hjust = 0.5))
+```
+
+![](cyclistic_report2-github_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+#### 4. Ride Count by Day of the Week
+
+``` r
+## Total Number of rides for users by day_of_week
+
+# Create pivot table
+pivot_user_count_by_day <- data %>%
+   filter(!is.na(day_of_week)) %>%
+   group_by(member_casual, day_of_week) %>%
+   summarise(
+      average_ride_length = mean(ride_length, na.rm = TRUE) / 60,
+      num_rides = n()
+   )
+```
+
+    ## `summarise()` has grouped output by 'member_casual'. You can override using the
+    ## `.groups` argument.
+
+``` r
+# Remove NA as day of week
+pivot_user_count_by_day <- pivot_user_count_by_day[!is.na(pivot_user_count_by_day$day_of_week), ]
+
+# Change the day_of_week column to display "Sun", "Mon", ..., "Sat"
+pivot_user_count_by_day$day_of_week <- lubridate::wday(pivot_user_count_by_day$day_of_week, label = TRUE)
+
+# Create a bar graph of number of rides per month using ggplot2
+# Note: use this to scale in units of 1,000: scale_y_continuous(labels = function(y) y / 1000)
+ggplot(pivot_user_count_by_day, aes(x = day_of_week, y = num_rides, fill = member_casual)) +
+   geom_col(position = "dodge") +
+   ggtitle("Total Number of Rides by Day") +
+   labs(x = "Day of Week", y = "Number of Rides (in thousands)", fill = "Member Type") +
+   scale_y_continuous(labels = function(y) y / 1000) +
+   theme_minimal() +
+   theme(
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+      axis.title.x = element_text(vjust = -1)
+   ) +
+   theme(plot.title = element_text(hjust = 0.5))
+```
+
+![](cyclistic_report2-github_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+#### 5. Ride Count by Month
+
+``` r
+## Avg ride lengths & Number of rides for users by day_of_week
+
+# Create pivot table
+pivot_user_count_by_month <- data %>%
+   filter(!is.na(month_of_year)) %>%
+   group_by(member_casual, month_of_year) %>%
+   summarise(
+      average_ride_length = mean(ride_length, na.rm = TRUE) / 60,
+      num_rides = n()
+   )
+```
+
+    ## `summarise()` has grouped output by 'member_casual'. You can override using the
+    ## `.groups` argument.
+
+``` r
+# Create a bar graph of number of rides per month using ggplot2
+# Note: use this to scale in units of 1,000: scale_y_continuous(labels = function(y) y / 1000)
+ggplot(pivot_user_count_by_month, aes(x = month_of_year, y = num_rides, fill = member_casual)) +
+   geom_col(position = "dodge") +
+   ggtitle("Total Number of Rides by Month") +
+   labs(x = "Month of Year", y = "Number of Rides (in thousands)", fill = "Member Type") +
+   scale_y_continuous(labels = function(y) y / 1000) +
+   theme_minimal() +
+   theme(
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+      axis.title.x = element_text(vjust = -1)
+   ) +
+   theme(plot.title = element_text(hjust = 0.5))
+```
+
+![](cyclistic_report2-github_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+| member_casual | day_of_week | average_ride_length_min | num_rides |
+|:--------------|------------:|------------------------:|:----------|
+| casual        |           1 |                32.75887 | 335,716   |
+| casual        |           2 |                27.71345 | 234,828   |
+| casual        |           3 |                25.08331 | 246,224   |
+| casual        |           4 |                24.26048 | 249,166   |
+| casual        |           5 |                24.72517 | 270,611   |
+| casual        |           6 |                27.26022 | 311,924   |
+| casual        |           7 |                32.13863 | 410,699   |
+| member        |           1 |                13.90683 | 408,859   |
+| member        |           2 |                11.90193 | 494,575   |
+| member        |           3 |                12.01257 | 576,753   |
+| member        |           4 |                11.92927 | 586,458   |
+| member        |           5 |                12.01936 | 589,588   |
+| member        |           6 |                12.47811 | 531,598   |
+| member        |           7 |                13.93910 | 472,855   |
+
+#### 6. Bike Rental Type Analysis
+
+Total Rentals by Bike Type
+
+``` r
+# Create pivot table
+pivot_bike_type <- data %>%
+   filter(!is.na(rideable_type)) %>%
+   group_by(member_casual, rideable_type) %>%
+   summarise(
+      num_rides = n()
+   )
+```
+
+    ## `summarise()` has grouped output by 'member_casual'. You can override using the
+    ## `.groups` argument.
+
+``` r
+# Create a bar graph of number of rides per month using ggplot2
+# Note: use this to scale in units of 1,000: scale_y_continuous(labels = function(y) y / 1000)
+ggplot(pivot_bike_type, aes(x = rideable_type, y = num_rides, fill = member_casual)) +
+   geom_col(position = "dodge") +
+   ggtitle("Total Number of Rides by Bike Type in 2023") +
+   labs(x = "Month of Year", y = "Number of Rides (in thousands)", fill = "Member Type") +
+   scale_y_continuous(labels = function(y) y / 1000) +
+   theme_minimal() +
+   theme(
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+      axis.title.x = element_text(vjust = -1)
+   ) +
+   theme(plot.title = element_text(hjust = 0.5))
+```
+
+![](cyclistic_report2-github_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+### Save my updated dataframe “data” to a csv file and RData file
+
+I haven’t mastered using the Rdata file yet, so I’m going to save the
+data to a csv file as well.
+
+``` r
+write.csv(data, file = "../data/2023_data_cyclistic.csv", row.names = FALSE) # file size-1.2 GB
+save(data, file = "../data/2023_data_cyclistic.RData") # file size-189 MB
+```
+
+## Data Analysis Process Step 5 - Share
+
+### Principal Observations
+
+- The average ride duration for annual members remains relatively
+  constant throughout the year. In contrast, casual riders tend to use
+  the service more frequently during warmer months.
+
+- The usage pattern for casual riders begins to rise from April, reaches
+  its peak in August, and then gradually declines from September to
+  December. The usage pattern for annual members, however, remains
+  relatively stable across all months.
+
+- An examination of the total rides per day reveals a potential inverse
+  relationship between casual riders and annual members, with annual
+  members taking more trips during the middle of the week.
+
+- When considering the total rides per month, the overall number is
+  higher in the warmer months and lower in the winter. This pattern is
+  consistent for both casual riders and annual members.
+
+- Classic bikes and electric bikes are highly popular, while docked
+  bikes see significantly less demand. It may be worth considering the
+  gradual phasing out of docked bikes based on these trends.
+
+## Data Analysis Process Step 6 - Act
+
+### Suggestions
+
+- Propose incentives for casual riders during colder months to encourage
+  them to use the bikes more frequently, as their total bike usage time
+  tends to decrease during these months.
+
+- Introduce incentives during the middle of the week to motivate casual
+  riders to use the bikes more often, as they are typically less active
+  during these days.
+
+- Implement targeted marketing strategies for both casual riders and
+  members during colder months when their service usage decreases.
+  Although members tend to have consistent trip lengths regardless of
+  the season, they take fewer trips during colder months.
+
+- Given the high popularity of classic and electric bikes and the low
+  demand for docked bikes, consider gradually phasing out the docked
+  bikes.
+
+## Additional Analysis
+
+- If more data such as addresses or zip codes could be obtained, it
+  would be possible to analyze usage patterns at a neighborhood level.
+  This could enable more finely tuned marketing and incentive strategies
+  by neighborhood, leading to more effective campaigns.
+
+- Other demographic data like income levels, age, and gender would allow
+  for a more detailed analysis and better recommendations. If such data
+  becomes available, it should be incorporated into the analysis.
+
+- Current pricing of fees paid by casual riders and annual members could
+  also be useful in finding ways to convert casual riders into annual
+  members.
+
+## Presentation
+
+The presentation of my findings can be found in this [slide
+deck](https://netorgft2723307-my.sharepoint.com/:p:/g/personal/bh_brianhafner_com/Eainj-2xZm9MsasW2MMNbXABJYyKDpGYMwoNxHjloHFivA?e=3fLEoS).
+
+## Appendix
+
+I use pandoc in MacOS to convert my OneNote notes to RMarkdown. I copied
+my OneNote notes to a Word doc and then used pandoc to convert the Word
+doc to RMarkdown.
+
+``` bash
+#<!-- pandoc -o output.md project_notes.docx -->
+```
+
+## References
+
+- [R Best Practices - Krista L. DeStasio,
+  M.S](https://kdestasio.github.io/post/r_best_practices/)
