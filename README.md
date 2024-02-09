@@ -363,7 +363,8 @@ ggplot(pivot_avg_by_day, aes(x = day_of_week, y = average_ride_length, fill = me
    theme(plot.title = element_text(hjust = 0.5))
 ```
 
-![](cyclistic_report2-github_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+<img src="figs/2-avg_length_by_day.png">
+
 
 Both casual riders and members tend to take the longest rides on
 Saturdays and Sundays. Members take shorter rides on average than casual
